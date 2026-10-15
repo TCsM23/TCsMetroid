@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% from "_macros.html" import map_svg %}
+{% block bg %}grid{% endblock %}
+{% block title %}Editor · {{ map.name }}{% endblock %}
+{% block content %}
+<div class="base-head-row">
+  <div>
+    <p class="base-head-eyebrow">Map editor</p>
+    <h1 class="base-head-title">Edit {{ map.name }}</h1>
+    <p class="base-text-muted">Every save validates the whole map. Changing rooms or gates clears stored seeds, since they no longer match the map. Click a gate on the map to inspect its rule.</p>
+  </div>
+</div>
+
+<div class="base-split-layout">
+  <section class="base-panel-box">
+    {% if view %}{{ map_svg(view, link_gates=true, map=map) }}{% else %}<p class="is-bad">Fix the problem below to see the map.</p>{% endif %}
+  </section>
+
+  <aside class="base-side-stack">
+    <section class="base-panel-box" id="inspector">
+      <h2 class="base-panel-title">Rule inspector <small>tokenizer → parser → tree</small></h2>
+      {% if inspect %}
+        <p class="base-text-muted">{{ names[inspect.gate.room_a] }} {{ '→' if inspect.gate.one_way else '↔' }} {{ names[inspect.gate.room_b] }}. Try a rule here without saving it. Use {% for k in PU().abilities %}<code>{{ k }}</code> {% endfor %}(this map's abilities), <code>&amp;</code>/<code>AND</code>, <code>|</code>/<code>OR</code> and parentheses.</p>
+        <form class="base-btn-row" method="get" action="#inspector">
+          <input type="hidden" name="gate" value="{{ inspect.gate.id }}">
+          <input class="base-input-mono is-grow" name="rule" value="{{ inspect.source }}" aria-label="Rule to inspect" spellcheck="false" autocomplete="off">
+          <button class="base-btn-action" type="submit">Inspect</button>
+        </form>
+        {% if inspect.error %}
+          <p class="is-bad">{{ inspect.error }}</p>
+        {% else %}
+          <p class="base-form-label">1 · Tokens</p>
+          <p>{% for t in inspect.tokens %}<span class="editor-token-chip"><b>{{ t.kind }}</b>{{ t.value }}</span>{% else %}<span class="base-text-muted">No tokens: the gate is open.</span>{% endfor %}</p>
+          {% if inspect.tree %}
+            <p class="base-form-label">2 · Expression tree</p>
+            <div class="base-table-scroll">
+              <svg class="editor-tree-svg" viewBox="0 0 {{ inspect.tree.width }} {{ inspect.tree.height }}" width="{{ inspect.tree.width }}" height="{{ inspect.tree.height }}" role="img" aria-label="Expression tree">
+                {% for e in inspect.tree.edges %}<line x1="{{ e.x1 }}" y1="{{ e.y1 }}" x2="{{ e.x2 }}" y2="{{ e.y2 }}"/>{% endfor %}
+                {% for n in inspect.tree.nodes %}
+                  <circle class="{{ 'mapsvg-fill-' ~ n.ability if n.ability else 'editor-tree-op' }}" cx="{{ n.x }}" cy="{{ n.y }}" r="18"/>
+                  <text class="{{ 'editor-tree-leaf' if n.ability else 'editor-tree-optext' }}" x="{{ n.x }}" y="{{ n.y + 4 }}">{{ n.label }}</text>
+                {% endfor %}
+              </svg>
+            </div>
+          {% endif %}
+          <p class="base-form-label">3 · Opens with</p>
+          <ul class="base-list-rows">
+            {% for m in inspect.sets %}
+              <li><span class="base-list-key">set</span><span>{% if m == 0 %}Nothing needed{% else %}{% for k in PU().abilities if m // PU().bits[k] % 2 %}<span class="base-pill-item base-pill-{{ k }}">{{ PU().name(k) }}</span>{% endfor %}{% endif %}</span></li>
+            {% else %}<li><span class="base-list-key is-bad">✕</span><span>No combination opens this gate.</span></li>{% endfor %}
+          </ul>
+        {% endif %}
+      {% else %}
+        <p class="base-text-muted">Add a gate to inspect its rule.</p>
+      {% endif %}
+    </section>
+
+    <section class="base-panel-box">
+      <h2 class="base-panel-title">Map details</h2>
+      <form class="base-form-stack" method="post">
+        <input type="hidden" name="action" value="update_map_info">
+        <label class="base-form-field"><span>Name</span><input name="name" value="{{ map.name }}" maxlength="80" required></label>
+        <label class="base-form-field"><span>Description</span><textarea name="description" rows="2">{{ map.description }}</textarea></label>
+        <button class="base-btn-action" type="submit">Save details</button>
+      </form>
+      <form class="base-form-stack" method="post">
+        <input type="hidden" name="action" value="update_map_ends">
+        <div class="base-form-pair">
+          <label class="base-form-field"><span>Start room</span><select name="start">{% for r in map.rooms %}<option value="{{ r.key }}" {% if r.key == map.start_key %}selected{% endif %}>{{ r.name }}</option>{% endfor %}</select></label>
+          <label class="base-form-field"><span>Boss room</span><select name="boss">{% for r in map.rooms %}<option value="{{ r.key }}" {% if r.key == map.boss_key %}selected{% endif %}>{{ r.name }}</option>{% endfor %}</select></label>
+        </div>
+        <button class="base-btn-action" type="submit">Save start and boss</button>
+      </form>
+      <form class="base-form-stack" method="post" action="{{ url_for('main.save_template', map_id=map.id) }}">
+        <label class="base-form-field"><span>Template name</span><input name="name" maxlength="80" value="{{ map.name }} template"></label>
+        <button class="base-btn-action" type="submit">Save as template</button>
+      </form>
+    </section>
+  </aside>
+</div>
+
+<section class="base-panel-box" id="rooms">
+  <h2 class="base-panel-title">Rooms <small>{{ map.rooms | length }}</small></h2>
+  <div class="base-table-scroll"><table class="base-table-data editor-room-table">
+    <thead><tr><th>Key</th><th>Name</th><th>X</th><th>Y</th><th>Seconds</th><th>Item</th><th></th></tr></thead>
+    <tbody>
+      {% for r in map.rooms %}
+        {% set fid = 'room-' ~ r.id %}
+        <tr>
+          <td><code>{{ r.key }}</code><input type="hidden" form="{{ fid }}" name="key" value="{{ r.key }}"></td>
+          <td><input form="{{ fid }}" name="name" value="{{ r.name }}" maxlength="60" aria-label="Name"></td>
+          <td><input form="{{ fid }}" name="x" type="number" min="0" max="40" value="{{ r.x }}" class="is-num" aria-label="X"></td>
+          <td><input form="{{ fid }}" name="y" type="number" min="0" max="40" value="{{ r.y }}" class="is-num" aria-label="Y"></td>
+          <td><input form="{{ fid }}" name="seconds" type="number" min="1" max="999" value="{{ r.seconds }}" class="is-num" aria-label="Seconds"></td>
+          <td><select form="{{ fid }}" name="item" aria-label="Item"><option value="">None</option>{% for k, name in items.items() %}<option value="{{ k }}" {% if r.item == k %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></td>
+          <td class="editor-row-actions">
+            <form id="{{ fid }}" method="post"><input type="hidden" name="action" value="update_room"><input type="hidden" name="room_id" value="{{ r.id }}"><input type="hidden" name="anchor" value="rooms"><button class="base-btn-action" type="submit">Save</button></form>
+            <form method="post"><input type="hidden" name="action" value="delete_room"><input type="hidden" name="room_id" value="{{ r.id }}"><input type="hidden" name="anchor" value="rooms"><button class="base-btn-action is-danger" type="submit" {% if r.key in (map.start_key, map.boss_key) %}disabled title="Start and boss rooms can't be deleted"{% endif %}>Delete</button></form>
+          </td>
+        </tr>
+      {% endfor %}
+      <tr class="editor-add-row">
+        <td><input form="add-room" name="key" required placeholder="new_key" aria-label="New room key"></td>
+        <td><input form="add-room" name="name" placeholder="Room name" aria-label="New room name"></td>
+        <td><input form="add-room" name="x" type="number" min="0" max="40" required class="is-num" aria-label="X"></td>
+        <td><input form="add-room" name="y" type="number" min="0" max="40" required class="is-num" aria-label="Y"></td>
+        <td><input form="add-room" name="seconds" type="number" min="1" max="999" value="10" class="is-num" aria-label="Seconds"></td>
+        <td><select form="add-room" name="item" aria-label="Item"><option value="">None</option>{% for k, name in items.items() %}<option value="{{ k }}">{{ name }}</option>{% endfor %}</select></td>
+        <td><form id="add-room" method="post"><input type="hidden" name="action" value="add_room"><input type="hidden" name="anchor" value="rooms"><button class="base-btn-action is-primary" type="submit">Add room</button></form></td>
+      </tr>
+    </tbody>
+  </table></div>
+  <p class="base-text-muted">X and Y are grid positions on the map. Gates are drawn as straight lines, so neighbors usually sit one cell apart.</p>
+</section>
+
+<section class="base-panel-box" id="gates">
+  <h2 class="base-panel-title">Gates <small>{{ map.gates | length }}</small></h2>
+  <div class="base-table-scroll"><table class="base-table-data editor-gate-table">
+    <thead><tr><th>From</th><th>To</th><th>Rule</th><th>One-way</th><th></th></tr></thead>
+    <tbody>
+      {% for g in map.gates %}
+        {% set fid = 'gate-' ~ g.id %}
+        <tr>
+          <td>{{ names[g.room_a] }}</td><td>{{ names[g.room_b] }}</td>
+          <td><input form="{{ fid }}" name="rule" value="{{ g.rule }}" class="base-input-mono" placeholder="open" aria-label="Rule" spellcheck="false"></td>
+          <td><input form="{{ fid }}" type="checkbox" name="one_way" {% if g.one_way %}checked{% endif %} aria-label="One-way"></td>
+          <td class="editor-row-actions">
+            <form id="{{ fid }}" method="post"><input type="hidden" name="action" value="update_gate"><input type="hidden" name="gate_id" value="{{ g.id }}"><input type="hidden" name="gate" value="{{ g.id }}"><input type="hidden" name="anchor" value="gates"><button class="base-btn-action" type="submit">Save</button></form>
+            <a class="base-btn-action" href="{{ url_for('main.editor', map_id=map.id, gate=g.id) }}#inspector">Inspect</a>
+            <form method="post"><input type="hidden" name="action" value="delete_gate"><input type="hidden" name="gate_id" value="{{ g.id }}"><input type="hidden" name="anchor" value="gates"><button class="base-btn-action is-danger" type="submit">Delete</button></form>
+          </td>
+        </tr>
+      {% endfor %}
+      <tr class="editor-add-row">
+        <td><select form="add-gate" name="a" required aria-label="From room">{% for r in map.rooms %}<option value="{{ r.key }}">{{ r.name }}</option>{% endfor %}</select></td>
+        <td><select form="add-gate" name="b" required aria-label="To room">{% for r in map.rooms %}<option value="{{ r.key }}" {% if loop.index == 2 %}selected{% endif %}>{{ r.name }}</option>{% endfor %}</select></td>
+        <td><input form="add-gate" name="rule" class="base-input-mono" placeholder="e.g. D | (J & G)" aria-label="Rule" spellcheck="false"></td>
+        <td><input form="add-gate" type="checkbox" name="one_way" aria-label="One-way"></td>
+        <td><form id="add-gate" method="post"><input type="hidden" name="action" value="add_gate"><input type="hidden" name="anchor" value="gates"><button class="base-btn-action is-primary" type="submit">Add gate</button></form></td>
+      </tr>
+    </tbody>
+  </table></div>
+  <p class="base-text-muted">A one-way gate can only be crossed from the first room to the second. Leave the rule empty for an open door.</p>
+</section>
+
+<section class="base-panel-box editor-danger-panel">
+  <h2 class="base-panel-title">Delete map</h2>
+  <p class="base-text-muted">Removes {{ map.name }}, its rooms, gates and stored seeds. This can't be undone. Export the JSON first if you want a backup.</p>
+  <form class="base-btn-row" method="post" action="{{ url_for('main.delete_map', map_id=map.id) }}">
+    <label class="base-form-chip"><input type="checkbox" required> I understand</label>
+    <button class="base-btn-action is-danger" type="submit">Delete map</button>
+    <a class="base-btn-action" href="{{ url_for('main.export_map', map_id=map.id) }}">Export JSON</a>
+    <a class="base-btn-action" href="{{ url_for('api.export_for_game', map_id=map.id) }}">Export for games</a>
+  </form>
+</section>
+{% endblock %}

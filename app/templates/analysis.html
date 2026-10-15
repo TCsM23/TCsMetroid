@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% from "_macros.html" import map_svg, pill, placement_banner, letters %}
+{% block title %}Analysis · {{ map.name }}{% endblock %}
+{% block content %}
+<div class="base-head-row">
+  <div>
+    <p class="base-head-eyebrow">Topological sort · union-find · Tarjan's SCC · reverse search</p>
+    <h1 class="base-head-title">Map analysis</h1>
+    {{ placement_banner(map, seed) }}
+  </div>
+</div>
+
+<div class="base-split-layout">
+  <section class="base-panel-box">
+    {{ map_svg(view) }}
+    <form class="analysis-regions-form" method="get">
+      {% if seed %}<input type="hidden" name="seed" value="{{ seed.id }}">{% endif %}
+      <input type="hidden" name="set" value="1">
+      <span class="base-form-label">Color regions for a player holding</span>
+      {% for k, name in PU().abilities.items() %}
+        <label class="base-form-chip"><input type="checkbox" name="ab" value="{{ k }}" {% if k in held %}checked{% endif %}> {{ name }}</label>
+      {% endfor %}
+      <button class="base-btn-action" type="submit">Update</button>
+    </form>
+    <p class="base-text-muted">Rooms with the same color can walk to each other freely with those abilities. Faded lines are gates those abilities can't open. Red-outlined rooms are danger zones.</p>
+  </section>
+
+  <aside class="base-side-stack">
+    <section class="base-panel-box" id="order">
+      <h2 class="base-panel-title">Ability order <small>Kahn's algorithm</small></h2>
+      <p class="base-text-muted">An edge A → B means B's room can't be reached without A, even holding every other ability.</p>
+      <p class="analysis-edge-row">{% for a, b in deps.edges %}<span>{{ a | short_name }} → {{ b | short_name }}</span>{% else %}<span class="base-text-muted">No hard dependencies.</span>{% endfor %}</p>
+      <div class="base-table-scroll"><table class="base-table-data">
+        <thead><tr><th>Take</th><th>Becomes free</th><th>Queue after</th></tr></thead>
+        <tbody>{% for step in topo.log %}
+          <tr><td>{{ pill(step.take) }}</td><td>{{ step.freed | map('short_name') | join(', ') or '–' }}</td><td>[{{ step.queue | map('short_name') | join(', ') }}]</td></tr>
+        {% endfor %}</tbody>
+      </table></div>
+      <p class="analysis-order-row"><b>Order</b> {% for n in topo.order %}{{ pill(n) }}{% if not loop.last %}<span class="base-text-muted">→</span>{% endif %}{% endfor %}</p>
+      {% if topo.cycle %}<p class="is-bad">Stuck: {{ topo.cycle | map('short_name') | join(', ') }} never reached zero prerequisites because items depend on each other in a cycle. This placement is soft-locked.</p>{% endif %}
+    </section>
+
+    <section class="base-panel-box">
+      <h2 class="base-panel-title">Item criticality</h2>
+      <ul class="base-list-rows">
+        {% for slot, item in placement.items() %}
+          <li><span class="base-list-key {{ 'is-bad' if critical[slot] else 'is-ok' }}">{{ 'Required' if critical[slot] else 'Optional' }}</span><span>{{ pill(item) }} in {{ names[slot] }}</span></li>
+        {% endfor %}
+      </ul>
+      <p class="base-text-muted">Each item is removed in turn and the map is re-checked.</p>
+    </section>
+
+    <section class="base-panel-box">
+      <h2 class="base-panel-title">Danger zones <small>soft-lock pockets</small></h2>
+      {% if danger.dead_states %}
+        <p class="is-bad">{{ danger.dead_states | length }} of {{ danger.reachable_states }} reachable states can never reach the boss.</p>
+        <ul class="base-list-rows">
+          {% for room, mask in danger.dead_states[:12] %}
+            <li><span class="base-list-key">{{ names[room] }}</span><span>holding {{ letters(mask) }}</span></li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="is-ok">All {{ danger.reachable_states }} reachable states can still finish the game.</p>
+      {% endif %}
+      <p class="base-text-muted">Forward BFS over every (room, abilities) state from the start, then reverse BFS from the boss. Anything reached forward but not backward is a trap.</p>
+    </section>
+
+    <section class="base-panel-box">
+      <h2 class="base-panel-title">Strongly connected components <small>Tarjan</small></h2>
+      <p class="base-text-muted">With every ability, rooms in one component can all reach each other. More than one component means some one-way drop splits the map.</p>
+      <ul class="base-list-rows">
+        {% for comp in sccs %}<li><span class="base-list-key">C{{ loop.index }}</span><span>{{ comp | names_of(names) }}</span></li>{% endfor %}
+      </ul>
+    </section>
+
+    <section class="base-panel-box">
+      <h2 class="base-panel-title">Regions <small>union-find</small></h2>
+      <p class="base-text-muted">{{ regions.groups | length }} regions · {{ regions.unions | length }} unions · {{ regions.find_calls }} find() calls · max rank {{ regions.max_rank }}</p>
+      <ul class="base-list-rows">
+        {% for grp in regions.groups %}
+          <li><span class="base-list-key"><i class="base-list-swatch" style="background:{{ region_colors[loop.index0 % region_colors|length] }}"></i></span><span>{{ grp | names_of(names) }}</span></li>
+        {% endfor %}
+      </ul>
+    </section>
+  </aside>
+</div>
+{% endblock %}

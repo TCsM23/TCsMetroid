@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "_macros.html" import map_svg, placement_banner %}
+{% block title %}Play · {{ map.name }}{% endblock %}
+{% block content %}
+<div class="base-head-row">
+  <div>
+    <p class="base-head-eyebrow">Playtest · walk the map as the player</p>
+    <h1 class="base-head-title">Play {{ map.name }}</h1>
+    {{ placement_banner(map, seed) }}
+  </div>
+  <span id="play-status" class="base-status-chip is-warn" role="status">Exploring</span>
+</div>
+
+<div class="base-split-layout">
+  <section class="base-panel-box">
+    <div id="play-map" class="playtest-map-wrap">{{ map_svg(view) }}</div>
+    <div class="base-btn-row">
+      <label class="base-form-chip"><input type="checkbox" id="play-fog" checked> Hide items until found</label>
+      <button type="button" class="base-btn-action" id="play-restart">Restart</button>
+    </div>
+    <p class="base-text-muted">Click a door button, or click a neighbouring room on the map. Doors only open if you hold what they need.</p>
+  </section>
+
+  <aside class="base-side-stack">
+    <section class="base-panel-box">
+      <h2 class="base-panel-title" id="play-room">Start</h2>
+      <div class="playtest-stats-row">
+        <div><b id="play-moves">0</b><span>Moves</span></div>
+        <div><b id="play-seconds">0</b><span>Seconds</span></div>
+        <div><b id="play-held">–</b><span>Holding</span></div>
+      </div>
+      <p id="play-message" class="base-text-muted"></p>
+      <h3 class="base-form-label">Exits</h3>
+      <ul class="base-list-rows" id="play-exits"></ul>
+    </section>
+    <section class="base-panel-box">
+      <h2 class="base-panel-title">Log</h2>
+      <ol class="base-list-rows" id="play-log"></ol>
+    </section>
+  </aside>
+</div>
+
+<script id="play-data" type="application/json">{{ game | tojson }}</script>
+<script src="{{ url_for('static', filename='playtest.js') }}"></script>
+{% endblock %}

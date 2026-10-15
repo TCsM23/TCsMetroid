@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block bg %}warp{% endblock %}
+{% block title %}Play · {{ map.name if map else 'Sandbox' }}{% endblock %}
+{% block main_class %}game-page-wrap is-wide{% endblock %}
+{% block content %}
+<div class="base-head-row">
+  <div>
+    <p class="base-head-eyebrow">{{ 'Play mode' if map else 'Sandbox draft · not saved' }}</p>
+    <h1 class="base-head-title" id="game-title">{{ map.name if map else 'Sandbox map' }}</h1>
+    {% if seed %}<p class="base-placement-note">Seed {{ seed.number }} · code <code>{{ seed.code }}</code></p>{% endif %}
+  </div>
+  <div class="base-btn-row">
+    {% if map %}
+      <a class="base-btn-action" href="{{ url_for('main.designer', map_id=map.id) }}">Back to designer</a>
+      <a class="base-btn-action" href="{{ url_for('main.overview', map_id=map.id, **({'seed': seed.id} if seed else {})) }}">Planner view</a>
+    {% else %}
+      <a class="base-btn-action" href="{{ url_for('main.sandbox') }}">Back to sandbox</a>
+    {% endif %}
+    <button type="button" class="base-btn-action" id="game-fullscreen">⛶ Full screen</button>
+  </div>
+</div>
+
+<div class="game-stage-wrap" id="game-stage" tabindex="0" aria-label="Game. Use WASD or arrow keys to move and Space to fire.">
+  <div class="game-hud-strip" id="game-hud" hidden>
+    <div class="game-hud-energy">
+      <span class="game-hud-label">ENERGY</span>
+      <div class="game-hud-energy-row">
+        <span class="game-hud-energy-num" id="hud-energy">99</span>
+        <div class="game-hud-tanks" id="hud-tanks"></div>
+      </div>
+      <div class="game-hud-bar"><b id="hud-energy-bar" style="width:100%"></b></div>
+    </div>
+    <div class="game-hud-centre">
+      <span class="game-hud-room" id="hud-room">—</span>
+      <div class="game-hud-powerups" id="hud-powerups" aria-label="Power-ups"></div>
+    </div>
+    <dl class="game-hud-stats">
+      <div><dt>TIME</dt><dd id="hud-time">00:00</dd></div>
+      <div><dt>MAP</dt><dd id="hud-explored">0%</dd></div>
+      <div><dt>ITEMS</dt><dd id="hud-items">0/0</dd></div>
+    </dl>
+    <canvas class="game-hud-map" id="hud-map" width="320" height="200" aria-label="Minimap"></canvas>
+  </div>
+
+  <div class="game-view-box">
+    <canvas class="game-canvas-view" id="game-canvas" width="960" height="600"></canvas>
+    <div class="game-hud-layer" id="game-hud-layer" hidden>
+      <div class="game-hud-boss" id="hud-boss" hidden>
+        <span class="game-hud-label">GUARDIAN</span>
+        <div class="game-hud-bar"><b id="hud-boss-bar" style="width:100%"></b></div>
+      </div>
+      <p class="game-hud-banner" id="hud-banner"></p>
+      <p class="game-hud-toast" id="hud-toast"></p>
+      <div class="game-hud-alert" id="hud-alert" hidden>
+        <b>Soft-locked</b>
+        <span>With what you're holding, the boss can no longer be reached from here. This is a trap in the map design: the Analysis page lists it as a danger zone.</span>
+        <div class="base-btn-row"><button type="button" class="base-btn-action is-primary" data-action="restart">Restart run</button>
+          <button type="button" class="base-btn-action" data-action="dismiss">Keep exploring</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-overlay-screen" id="screen-start">
+    <div class="game-overlay-card">
+      <p class="game-overlay-eyebrow">TCsMetroid</p>
+      <h2 class="game-overlay-title" id="start-title">Loading…</h2>
+      <p class="game-overlay-text" id="start-text">Explore every room, collect power-ups to open locked doors, and defeat the guardian.</p>
+      <p class="game-overlay-text"><kbd class="base-kbd">WASD</kbd> move · <kbd class="base-kbd">Space</kbd> fire · <kbd class="base-kbd">Esc</kbd> pause &amp; map · <kbd class="base-kbd">M</kbd> mute</p>
+      <button type="button" class="base-btn-action is-primary" data-action="start" disabled>Start mission</button>
+      <span class="game-overlay-start">PRESS ENTER</span>
+    </div>
+  </div>
+
+  <div class="game-overlay-screen" id="screen-pause" hidden>
+    <div class="game-overlay-card">
+      <p class="game-overlay-eyebrow">Paused</p>
+      <canvas class="game-overlay-map" id="pause-map" width="1120" height="700" aria-label="Full map of explored rooms"></canvas>
+      <dl class="game-overlay-stats" id="pause-stats"></dl>
+      <div class="base-btn-row">
+        <button type="button" class="base-btn-action is-primary" data-action="resume">Resume</button>
+        <button type="button" class="base-btn-action" data-action="restart">Restart</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-overlay-screen" id="screen-dead" hidden>
+    <div class="game-overlay-card">
+      <p class="game-overlay-eyebrow">Suit integrity lost</p>
+      <h2 class="game-overlay-title is-bad">Game over</h2>
+      <p class="game-overlay-text">You keep every power-up you found. Continue from the starting room?</p>
+      <div class="base-btn-row">
+        <button type="button" class="base-btn-action is-primary" data-action="continue">Continue</button>
+        <button type="button" class="base-btn-action" data-action="restart">Restart run</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-overlay-screen" id="screen-win" hidden>
+    <div class="game-overlay-card">
+      <p class="game-overlay-eyebrow">Guardian destroyed</p>
+      <h2 class="game-overlay-title is-ok">Mission complete</h2>
+      <dl class="game-overlay-stats" id="win-stats"></dl>
+      <p class="game-overlay-text" id="win-text"></p>
+      <div class="base-btn-row">
+        <button type="button" class="base-btn-action is-primary" data-action="restart">Play again</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-overlay-screen" id="screen-error" hidden>
+    <div class="game-overlay-card">
+      <h2 class="game-overlay-title is-bad">Can't play this</h2>
+      <p class="game-overlay-text" id="error-text"></p>
+      <a class="base-btn-action" href="{{ url_for('main.sandbox') }}">Open the sandbox</a>
+    </div>
+  </div>
+</div>
+
+<div class="game-touch-pad" aria-hidden="true">
+  <div class="game-touch-dpad">
+    <button type="button" data-touch="up">▲</button><button type="button" data-touch="left">◀</button>
+    <button type="button" data-touch="right">▶</button><button type="button" data-touch="down">▼</button>
+  </div>
+  <button type="button" data-touch="fire">FIRE</button>
+</div>
+
+<div class="game-info-row">
+  <section class="base-panel-box">
+    <h2 class="base-panel-title">How to play</h2>
+    <p class="base-text-muted">Walk into a doorway to go through it. Coloured barriers are locked: they show the letters of the power-ups that open them. Glowing orbs are power-ups. A grey hatch with an arrow is a one-way door you can't use from this side.</p>
+  </section>
+  <section class="base-panel-box">
+    <h2 class="base-panel-title">Planner par</h2>
+    <p class="base-text-muted" id="game-par">The route finder's fastest path is loaded when the game starts.</p>
+  </section>
+</div>
+
+{% if game %}<script id="play-data" type="application/json">{{ game | tojson }}</script>{% endif %}
+<script id="play-config" type="application/json">{{ {'draft_url': url_for('api.play_data')} | tojson }}</script>
+<script src="{{ url_for('static', filename='game.js') }}"></script>
+{% endblock %}

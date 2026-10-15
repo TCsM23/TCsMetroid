@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status, mini_map %}
+{% block title %}Maps{% endblock %}
+{% block content %}
+{% set hero = rows[0] if rows else none %}
+<section class="index-hero-block">
+  <div class="index-hero-copy">
+    <p class="base-head-eyebrow">Metroidvania map lab</p>
+    <h1 class="index-hero-title">TCs<b>Metroid</b></h1>
+    <p class="index-hero-lead">Draw a Metroidvania map, invent your own power-ups, and let graph algorithms prove it can be finished. Then randomize the items and play it yourself.</p>
+    <div class="base-btn-row">
+      <a class="base-btn-action is-primary" href="#new-map">New map</a>
+      <a class="base-btn-action is-visor" href="{{ url_for('main.sandbox') }}">Open sandbox</a>
+      {% if hero %}<a class="base-btn-action" href="{{ url_for('main.playtest', map_id=hero.map.id) }}">▶ Play {{ hero.map.name }}</a>{% endif %}
+    </div>
+  </div>
+  <div class="index-hero-art" aria-hidden="true">
+    {% if hero and hero.mini %}{{ mini_map(hero.mini) }}{% endif %}
+    <div class="index-hero-scan"></div>
+  </div>
+</section>
+
+<div class="index-feature-row">
+  <div class="index-feature-card"><span>01 · BUILD</span><b>Design</b><p class="base-text-muted">Drag rooms, draw doors, and make up power-ups with your own names and colours.</p></div>
+  <div class="index-feature-card"><span>02 · VERIFY</span><b>Check</b><p class="base-text-muted">BFS, Dijkstra and A* find the fastest route and every soft-lock trap.</p></div>
+  <div class="index-feature-card"><span>03 · SHUFFLE</span><b>Randomize</b><p class="base-text-muted">Seeded item shuffles that are guaranteed to stay beatable.</p></div>
+  <div class="index-feature-card"><span>04 · RUN</span><b>Play</b><p class="base-text-muted">Explore the map room by room, fight, collect power-ups and beat the boss.</p></div>
+</div>
+
+<section class="index-section-head">
+  <h2 class="index-section-title">Your maps</h2>
+  <p class="base-text-muted">{{ rows | length }} map{{ '' if rows | length == 1 else 's' }}</p>
+</section>
+<div class="index-maplist-grid">
+  {% for row in rows %}
+    <article class="index-maplist-card">
+      <div class="index-maplist-thumb">{% if row.mini %}{{ mini_map(row.mini, 'Preview of ' ~ row.map.name) }}{% endif %}</div>
+      <div class="index-maplist-body">
+        <div class="index-maplist-head">
+          <h2><a href="{{ url_for('main.overview', map_id=row.map.id) }}">{{ row.map.name }}</a></h2>
+          {{ status(row.beatable) }}
+        </div>
+        <p class="base-text-muted">{{ row.map.description or 'No description.' }}</p>
+        <div class="index-maplist-powerups" aria-label="Power-ups">
+          {% for p in row.powerups %}<span style="background: {{ p.color }}" title="{{ p.name }}">{{ p.key }}</span>{% endfor %}
+        </div>
+        <dl class="index-maplist-stats">
+          <div><dt>Rooms</dt><dd>{{ row.rooms }}</dd></div>
+          <div><dt>Doors</dt><dd>{{ row.gates }}</dd></div>
+          <div><dt>Power-ups</dt><dd>{{ row.powerups | length }}</dd></div>
+          <div><dt>Seeds</dt><dd>{{ row.seeds }}</dd></div>
+        </dl>
+        <div class="base-btn-row">
+          <a class="base-btn-action is-primary" href="{{ url_for('main.playtest', map_id=row.map.id) }}">▶ Play</a>
+          <a class="base-btn-action" href="{{ url_for('main.designer', map_id=row.map.id) }}">Design</a>
+          <a class="base-btn-action" href="{{ url_for('main.overview', map_id=row.map.id) }}">Open</a>
+          <a class="base-btn-action" href="{{ url_for('main.export_map', map_id=row.map.id) }}">Export JSON</a>
+        </div>
+      </div>
+    </article>
+  {% else %}
+    <p class="index-empty-box">No maps yet. Create one below, or start in the sandbox.</p>
+  {% endfor %}
+</div>
+
+<div class="index-forms-grid" id="new-map">
+  <form class="base-panel-box" method="post" action="{{ url_for('main.create_map') }}">
+    <h2 class="base-panel-title">New map</h2>
+    <label class="base-form-field"><span>Name</span><input name="name" required maxlength="80" placeholder="Sunken Citadel"></label>
+    <label class="base-form-field"><span>Start from</span>
+      <select name="template">{% for t in templates %}<option value="{{ t.value }}">{{ t.label }}</option>{% endfor %}</select></label>
+    <button class="base-btn-action is-primary" type="submit">Create and open designer</button>
+  </form>
+
+  <form class="base-panel-box" method="post" action="{{ url_for('main.import_map') }}">
+    <h2 class="base-panel-title">Import JSON</h2>
+    <label class="base-form-field"><span>Map JSON (from Export JSON or the API)</span>
+      <textarea name="json" rows="6" required placeholder='{"name": "...", "start": "...", "boss": "...", "rooms": [...], "gates": [...]}'></textarea></label>
+    <button class="base-btn-action" type="submit">Import</button>
+  </form>
+</div>
+
+<section class="base-panel-box" id="templates">
+  <h2 class="base-panel-title">Your templates</h2>
+  {% if user_templates %}
+    <ul class="base-list-rows">
+      {% for t in user_templates %}
+        <li><span class="base-list-key">{{ t.rooms | length }} rooms</span>
+          <span class="index-template-row">{{ t.name }}
+            <a class="base-btn-action is-small" href="{{ url_for('main.sandbox', template='map-' ~ t.id) }}">Try in sandbox</a>
+            <form method="post" action="{{ url_for('main.delete_map', map_id=t.id) }}"><button class="base-btn-action is-small is-danger" type="submit">Delete</button></form>
+          </span></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="base-text-muted">None yet. Open any map's Editor and choose Save as template to reuse its layout.</p>
+  {% endif %}
+</section>
+{% endblock %}

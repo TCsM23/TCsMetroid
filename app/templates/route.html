@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "_macros.html" import map_svg, pill, placement_banner, letters %}
+{% block title %}Route · {{ map.name }}{% endblock %}
+{% block content %}
+{% set q = {'seed': seed.id} if seed else {} %}
+<div class="base-head-row">
+  <div>
+    <p class="base-head-eyebrow">State-space search · (room, abilities held)</p>
+    <h1 class="base-head-title">Fastest route</h1>
+    {{ placement_banner(map, seed) }}
+  </div>
+  <nav class="base-seg-nav" aria-label="Algorithm">
+    {% for key, (label, _) in ALGORITHMS.items() %}
+      <a href="{{ url_for('main.route', map_id=map.id, algo=key, **q) }}" {% if key == algo %}aria-current="true"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </nav>
+</div>
+
+<div class="base-split-layout">
+  <section class="base-panel-box">{{ map_svg(view) }}
+    <p class="base-text-muted">Orange lines are the {{ chosen.label }} route. Numbers in each room's corner are the steps where the route passes through it.</p>
+  </section>
+
+  <aside class="base-side-stack">
+    <section class="base-panel-box">
+      <h2 class="base-panel-title">Compare algorithms</h2>
+      <div class="base-table-scroll"><table class="base-table-data">
+        <thead><tr><th>Algorithm</th><th>Structure</th><th>Expanded</th><th>Frontier</th><th>Moves</th><th>Sec</th></tr></thead>
+        <tbody>
+        {% for r in results %}
+          <tr class="{% if r.found and r.seconds == best_seconds %}is-best{% endif %}{% if r.algorithm == algo %} is-chosen{% endif %}">
+            <td><a href="{{ url_for('main.route', map_id=map.id, algo=r.algorithm, **q) }}">{{ r.label }}</a></td>
+            <td class="is-nowrap">{{ r.structure }}</td><td>{{ r.expanded }}</td><td>{{ r.max_frontier }}</td>
+            <td>{{ r.moves if r.found else '–' }}</td><td>{{ r.seconds if r.found else '–' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      <p class="base-text-muted">g = seconds so far, h = estimated seconds left. Green rows found the fastest route. BFS counts rooms, not seconds. DFS returns the first route it stumbles on. A* uses the fastest time to the boss with every gate open as its estimate, which never overestimates, so it matches Dijkstra while expanding fewer states.</p>
+    </section>
+
+    <section class="base-panel-box">
+      <h2 class="base-panel-title">{{ chosen.label }} route</h2>
+      {% if chosen.found %}
+        <p class="base-text-muted">{{ chosen.moves }} moves · {{ chosen.seconds }} seconds · {{ chosen.states_seen }} states seen</p>
+        <ol class="base-list-rows">
+          {% for s in chosen.steps %}
+            <li class="{% if s.picked %}is-pickup{% endif %}"><span class="base-list-key">{{ '%02d' % loop.index0 }}</span>
+              <span>{{ names[s.room] }} <span class="base-text-muted">· {{ s.seconds }}s · </span>{{ letters(s.mask) }}{% if s.picked %} {{ pill(s.picked) }}{% endif %}</span></li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <p class="is-bad">No route reaches the boss with this placement. The Check page shows where the player gets stuck.</p>
+      {% endif %}
+    </section>
+  </aside>
+</div>
+{% endblock %}

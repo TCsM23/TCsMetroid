@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pill %}
+{% block title %}Randomize · {{ map.name }}{% endblock %}
+{% block content %}
+<div class="base-head-row">
+  <div>
+    <p class="base-head-eyebrow">Seeded randomizer</p>
+    <h1 class="base-head-title">Randomize items</h1>
+    <p class="base-text-muted">Shuffles the {{ slots | length }} items ({% for it in pool %}{{ it }}{% if not loop.last %}, {% endif %}{% endfor %}) across {{ slots | length }} slots. The same seed and algorithm always give the same placement, and every result is checked before it's saved.</p>
+  </div>
+</div>
+
+<div class="base-split-layout is-even">
+  <form class="base-panel-box" method="post">
+    <h2 class="base-panel-title">New seed</h2>
+    <label class="base-form-field"><span>Seed number</span><input type="number" name="number" min="0" value="{{ range(1, 99999) | random }}" required></label>
+    <fieldset class="base-form-radio">
+      <legend>Algorithm</legend>
+      <label><input type="radio" name="algorithm" value="assumed" checked> <b>Assumed fill</b>: places each ability only where the player can reach it, assuming they already own every ability not placed yet. Beatable by construction.</label>
+      <label><input type="radio" name="algorithm" value="naive"> <b>Shuffle &amp; reroll</b>: Fisher–Yates shuffle, run the checker, and try again until a shuffle is beatable.</label>
+    </fieldset>
+    <button class="base-btn-action is-primary" type="submit">Generate</button>
+  </form>
+
+  <section class="base-panel-box">
+    <h2 class="base-panel-title">Recent seeds</h2>
+    {% if recent %}
+      <div class="base-table-scroll"><table class="base-table-data">
+        <thead><tr><th>Seed</th><th>Algorithm</th><th>Code</th><th>Time</th><th>Moves</th><th>Attempts</th></tr></thead>
+        <tbody>{% for s in recent %}
+          <tr><td><a href="{{ url_for('main.overview', map_id=map.id, seed=s.id) }}">#{{ s.number }}</a></td>
+            <td>{{ randomizers[s.algorithm][0] }}</td><td><code>{{ s.code }}</code></td>
+            <td>{{ s.route_seconds }}s</td><td>{{ s.route_moves }}</td><td>{{ s.attempts }}</td></tr>
+        {% endfor %}</tbody>
+      </table></div>
+    {% else %}
+      <p class="base-text-muted">No seeds yet. Generate one, or make a batch on the Seeds page.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

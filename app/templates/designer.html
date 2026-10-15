@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block bg %}grid{% endblock %}
+{% block title %}{{ 'Sandbox' if mode == 'sandbox' else 'Designer · ' ~ map.name }}{% endblock %}
+{% block main_class %}is-wide{% endblock %}
+{% block content %}
+<div id="designer-root" class="designer-page-wrap"
+     data-mode="{{ mode }}"
+     data-preview-url="{{ url_for('api.preview_map') }}"
+     data-save-url="{{ url_for('api.save_map', map_id=map.id) if mode == 'designer' else '' }}"
+     data-create-url="{{ url_for('api.import_map') }}"
+     data-designer-url="{{ url_for('main.designer', map_id=0) }}"
+     data-play-url="{{ url_for('main.sandbox_play') }}">
+
+  <div class="base-head-row">
+    <div>
+      <p class="base-head-eyebrow">{{ 'Sandbox · nothing is saved until you choose to' if mode == 'sandbox' else 'Visual designer' }}</p>
+      <h1 class="base-head-title" id="designer-title">{{ draft.name }}</h1>
+      <p class="base-text-muted">Drag rooms to move them. Use <b>Draw door</b> to drag from one room to another. Drag empty space to pan; <kbd class="base-kbd">Ctrl</kbd> + scroll to zoom. Every change is checked instantly.</p>
+    </div>
+    <span id="designer-status" class="base-status-chip is-warn" role="status">Checking…</span>
+  </div>
+
+  {% if mode == 'sandbox' %}
+    <form class="designer-template-form" method="get">
+      <label class="base-form-field is-inline"><span>Start from</span>
+        <select name="template" id="sandbox-template">
+          {% for t in templates %}<option value="{{ t.value }}" {% if t.value == current_template %}selected{% endif %}>{{ t.label }}</option>{% endfor %}
+        </select></label>
+      <button class="base-btn-action" type="submit">Load</button>
+      <span class="base-text-muted">Loading a template throws away the current sandbox.</span>
+    </form>
+  {% endif %}
+
+  <div class="designer-toolbar-row">
+    <div class="base-seg-nav" role="group" aria-label="Tool">
+      <button type="button" data-tool="move" aria-pressed="true" title="Move rooms (V)">Move</button>
+      <button type="button" data-tool="door" aria-pressed="false" title="Draw door (D)">Draw door</button>
+      <button type="button" data-tool="add" aria-pressed="false" title="Add room (R)">Add room</button>
+    </div>
+    <div class="base-btn-row">
+      <button type="button" class="base-btn-action is-icon" id="designer-undo" title="Undo (Ctrl+Z)">↶ Undo</button>
+      <button type="button" class="base-btn-action is-icon" id="designer-redo" title="Redo (Ctrl+Y)">↷ Redo</button>
+      <button type="button" class="base-btn-action is-visor" id="designer-play" title="Play this draft in a new tab">▶ Play draft</button>
+      {% if mode == 'designer' %}
+        <span id="designer-dirty" class="base-text-muted" hidden>Unsaved changes</span>
+        <button type="button" class="base-btn-action is-primary" id="designer-save">Save map</button>
+      {% else %}
+        <button type="button" class="base-btn-action" id="designer-export">Download JSON</button>
+        <button type="button" class="base-btn-action is-primary" id="designer-save-new">Save as new map</button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="base-split-layout">
+    <section class="base-panel-box designer-stage-box">
+      <div class="designer-zoom-bar" role="group" aria-label="Zoom">
+        <button type="button" class="base-btn-action is-icon is-small" id="designer-zoom-out" title="Zoom out (-)" aria-label="Zoom out">−</button>
+        <input type="range" class="designer-zoom-range" id="designer-zoom-range" min="25" max="300" step="5" value="100" aria-label="Zoom level">
+        <button type="button" class="base-btn-action is-icon is-small" id="designer-zoom-in" title="Zoom in (+)" aria-label="Zoom in">+</button>
+        <output class="designer-zoom-value" id="designer-zoom-value" for="designer-zoom-range">100%</output>
+        <button type="button" class="base-btn-action is-small" id="designer-zoom-fit" title="Fit the whole map (0)">Fit</button>
+        <button type="button" class="base-btn-action is-small" id="designer-zoom-reset" title="Actual size (1)">100%</button>
+        <span class="designer-zoom-hint">Drag empty space to pan · Ctrl + scroll to zoom</span>
+      </div>
+      <div class="mapsvg-frame-scroll designer-canvas-scroll" id="designer-scroll">
+        <svg id="designer-canvas" class="designer-canvas-svg" role="application" aria-label="Map designer canvas"></svg>
+      </div>
+      <div class="mapsvg-legend-row" id="designer-legend"></div>
+    </section>
+
+    <aside class="base-side-stack">
+      <section class="base-panel-box" id="designer-inspector" aria-live="polite"></section>
+
+      <section class="base-panel-box">
+        <div class="base-panel-head">
+          <h2 class="base-panel-title">Power-ups</h2>
+          <button type="button" class="base-btn-action is-small" id="designer-add-powerup">+ New power-up</button>
+        </div>
+        <ul class="designer-powerup-list" id="designer-powerups"></ul>
+        <p class="base-text-muted">Click one to edit its letter, name and colour. Abilities can be used in door rules; collectibles add max energy in the game.</p>
+      </section>
+
+      <section class="base-panel-box">
+        <h2 class="base-panel-title">Live check</h2>
+        <div id="designer-report"></div>
+        <p class="base-form-label">Test with abilities</p>
+        <div class="base-btn-row" id="designer-abilities"></div>
+        <p class="base-text-muted">Tick abilities to fade every room a player holding exactly those can't reach. Untick all to turn this off.</p>
+      </section>
+    </aside>
+  </div>
+
+  <p id="designer-toast" class="designer-toast-msg" role="status" hidden></p>
+</div>
+
+<script id="designer-data" type="application/json">{{ draft | tojson }}</script>
+<script id="designer-items" type="application/json">{{ PU().to_list() | tojson }}</script>
+<script src="{{ url_for('static', filename='designer.js') }}"></script>
+{% endblock %}

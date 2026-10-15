@@ -1,0 +1,67 @@
+{% macro pill(item) -%}
+  {%- if item == 'BOSS' -%}<span class="base-pill-item base-pill-boss">Boss</span>
+  {%- elif item -%}<span class="base-pill-item base-pill-{{ item }}">{{ PU().name(item) }}</span>{%- endif -%}
+{%- endmacro %}
+
+{% macro letters(mask) -%}
+  {%- for k in PU().abilities if mask // PU().bits[k] % 2 -%}<span class="base-letter-mask base-letter-{{ k }}">{{ k }}</span>{%- else -%}<span class="base-letter-mask">–</span>{%- endfor -%}
+{%- endmacro %}
+
+{% macro status(beatable) -%}
+  {%- if beatable is none -%}<span class="base-status-chip is-warn">Invalid</span>
+  {%- elif beatable -%}<span class="base-status-chip is-ok">Beatable</span>
+  {%- else -%}<span class="base-status-chip is-bad">Soft-locked</span>{%- endif -%}
+{%- endmacro %}
+
+{% macro placement_banner(map, seed) -%}
+  <p class="base-placement-note">
+    {% if seed %}Showing <b>seed {{ seed.number }}</b> ({{ 'Assumed fill' if seed.algorithm == 'assumed' else 'Shuffle & reroll' }}, code <code>{{ seed.code }}</code>).
+      <a href="{{ url_for(request.endpoint, map_id=map.id) }}">Back to vanilla items</a>
+    {% else %}Showing the <b>vanilla</b> item placement.{% endif %}
+  </p>
+{%- endmacro %}
+
+{% macro map_svg(view, link_gates=false, map=none) -%}
+<div class="mapsvg-frame-scroll">
+<svg class="mapsvg-frame-svg" viewBox="0 0 {{ view.width }} {{ view.height }}" role="img" aria-label="Map of rooms and gates">
+  {% for g in view.gates %}
+    <line class="{{ g.classes }}" x1="{{ g.x1 }}" y1="{{ g.y1 }}" x2="{{ g.x2 }}" y2="{{ g.y2 }}"/>
+    {% if g.arrow %}<polygon class="mapsvg-edge-arrow" points="-6,-6 6,0 -6,6" transform="translate({{ g.arrow.x }} {{ g.arrow.y }}) rotate({{ g.arrow.angle }})"/>{% endif %}
+  {% endfor %}
+  {% for r in view.rooms %}
+    <g data-room="{{ r.key }}" style="--i: {{ [loop.index0, 30] | min }}">
+      <title>{{ r.name }} · {{ r.seconds }}s{% if r.item %} · {{ PU().name(r.item) }}{% endif %}</title>
+      <rect class="{{ r.classes }}" x="{{ r.x }}" y="{{ r.y }}" width="{{ view.w }}" height="{{ view.h }}" rx="3" {% if r.fill %}style="fill:{{ r.fill }}"{% endif %}/>
+      <text class="mapsvg-room-name" x="{{ r.cx }}" y="{{ r.cy + 4 }}">{{ r.name }}</text>
+      {% if r.tag %}<text class="mapsvg-room-tag" x="{{ r.x + 6 }}" y="{{ r.y + 12 }}">{{ r.tag }}</text>{% endif %}
+      <text class="mapsvg-room-time" x="{{ r.x + 6 }}" y="{{ r.y + view.h - 6 }}">{{ r.seconds }}s</text>
+      {% if r.steps %}<text class="mapsvg-room-steps" x="{{ r.x + view.w - 6 }}" y="{{ r.y + view.h - 6 }}">{{ r.steps }}</text>{% endif %}
+      {% if r.item %}<circle class="mapsvg-item-dot mapsvg-fill-{{ r.item }}" cx="{{ r.x + view.w - 10 }}" cy="{{ r.y + 10 }}" r="8"/><text class="mapsvg-item-letter" x="{{ r.x + view.w - 10 }}" y="{{ r.y + 13.5 }}">{{ r.item }}</text>{% endif %}
+    </g>
+  {% endfor %}
+  {% for g in view.gates %}
+    {% if link_gates %}<a href="{{ url_for('main.editor', map_id=map.id, gate=map.gates[g.index].id) }}#inspector">{% endif %}
+    <g class="mapsvg-gate-badge mapsvg-gate-{{ g.kind }}{% if link_gates %} is-link{% endif %}">
+      <title>{{ 'Rule: ' ~ g.rule if g.rule else 'Open gate' }}{% if g.one_way %} · one-way{% endif %}</title>
+      <rect class="{% if g.ability %}mapsvg-fill-{{ g.ability }}{% endif %}" x="{{ g.mx - g.width / 2 }}" y="{{ g.my - 10 }}" width="{{ g.width }}" height="20" rx="10"/>
+      <text x="{{ g.mx }}" y="{{ g.my + 3.6 }}">{{ g.label }}</text>
+    </g>
+    {% if link_gates %}</a>{% endif %}
+  {% endfor %}
+</svg>
+</div>
+<div class="mapsvg-legend-row">
+  {% for k, name in PU().names.items() %}<span><i class="mapsvg-legend-{{ k }}"></i>{{ k }} · {{ name }}</span>{% endfor %}
+  <span>S1, S2… = sphere</span><span>Dashed + arrow = one-way</span>
+</div>
+{%- endmacro %}
+
+{% macro mini_map(mini, label='Map preview') -%}
+<svg viewBox="0 0 {{ mini.width }} {{ mini.height }}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="{{ label }}">
+  {% for l in mini.lines %}<line class="minimap-line{% if l.locked %} is-locked{% endif %}{% if l.one_way %} is-oneway{% endif %}" x1="{{ l.x1 }}" y1="{{ l.y1 }}" x2="{{ l.x2 }}" y2="{{ l.y2 }}"/>{% endfor %}
+  {% for r in mini.rooms %}
+    <rect class="minimap-room{% if r.kind %} is-{{ r.kind }}{% endif %}" x="{{ r.x }}" y="{{ r.y }}" width="{{ mini.w }}" height="{{ mini.h }}" rx="2.5"/>
+    {% if r.item %}<circle cx="{{ r.cx }}" cy="{{ r.cy }}" r="4" fill="{{ r.color }}"/>{% endif %}
+  {% endfor %}
+</svg>
+{%- endmacro %}

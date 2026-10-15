@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}How it works{% endblock %}
+{% block content %}
+<div class="base-head-row">
+  <div>
+    <p class="base-head-eyebrow">How it works</p>
+    <h1 class="base-head-title">From sketch to playable map</h1>
+    <p class="base-text-muted">TCsMetroid treats a Metroidvania map as a graph. Rooms are nodes, doors are edges, and each door has a rule saying which power-ups open it.</p>
+  </div>
+</div>
+
+<div class="about-step-grid">
+  <section class="base-panel-box about-step-card">
+    <h3>Design</h3>
+    <p>Drag rooms on a grid and draw doors between them. Give each door a rule such as <code>J | (D &amp; G)</code>: "Double Jump, or Dash and Grapple together".</p>
+  </section>
+  <section class="base-panel-box about-step-card">
+    <h3>Invent power-ups</h3>
+    <p>Every map has its own power-up list. Give each one a letter, a name and a colour. Abilities open doors; collectibles only raise max energy in the game.</p>
+  </section>
+  <section class="base-panel-box about-step-card">
+    <h3>Verify</h3>
+    <p>The checker proves the boss can be reached, the route finder compares four search algorithms, and the analysis page finds rooms that can trap the player.</p>
+  </section>
+  <section class="base-panel-box about-step-card">
+    <h3>Play</h3>
+    <p>Press Play to explore the map yourself. The game uses the same rules, so a door that's locked in the checker is locked in the game too.</p>
+  </section>
+</div>
+
+<div class="base-split-layout is-even">
+  <section class="base-panel-box" id="controls">
+    <h2 class="base-panel-title">Game controls</h2>
+    <dl class="about-keys-list">
+      <dt><kbd class="base-kbd">W</kbd><kbd class="base-kbd">A</kbd><kbd class="base-kbd">S</kbd><kbd class="base-kbd">D</kbd> or arrows</dt><dd>Move</dd>
+      <dt><kbd class="base-kbd">Space</kbd> <kbd class="base-kbd">J</kbd> or click</dt><dd>Fire beam (click aims at the cursor)</dd>
+      <dt><kbd class="base-kbd">Esc</kbd> <kbd class="base-kbd">P</kbd></dt><dd>Pause and show the full map</dd>
+      <dt><kbd class="base-kbd">M</kbd></dt><dd>Mute sound</dd>
+      <dt><kbd class="base-kbd">F</kbd></dt><dd>Full screen</dd>
+    </dl>
+    <p class="base-text-muted">Walk into a door to go through it. Locked doors show which power-ups they need. Touch a glowing orb to pick up a power-up. Defeat the boss to finish.</p>
+  </section>
+
+  <section class="base-panel-box" id="algorithms">
+    <h2 class="base-panel-title">Algorithms inside</h2>
+    <ul class="base-list-rows">
+      <li><span class="base-list-key">Parser</span><span>Recursive descent turns door rules into expression trees</span></li>
+      <li><span class="base-list-key">BFS</span><span>Fixed-point check groups rooms into spheres of progress</span></li>
+      <li><span class="base-list-key">Dijkstra · A*</span><span>Fastest route over (room, power-ups held) states</span></li>
+      <li><span class="base-list-key">Kahn</span><span>Topological sort gives the order power-ups must be found</span></li>
+      <li><span class="base-list-key">Tarjan</span><span>Strongly connected parts split by one-way drops</span></li>
+      <li><span class="base-list-key">Union-find</span><span>Regions a player can walk around freely</span></li>
+      <li><span class="base-list-key">Reverse BFS</span><span>Soft-lock states the game warns you about</span></li>
+      <li><span class="base-list-key">Fisher–Yates</span><span>Seeded shuffles for the randomizer</span></li>
+    </ul>
+  </section>
+</div>
+{% endblock %}

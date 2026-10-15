@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "_macros.html" import map_svg, pill, status, placement_banner %}
+{% block title %}{{ map.name }}{% endblock %}
+{% block content %}
+<div class="base-head-row">
+  <div>
+    <p class="base-head-eyebrow">Beatability check · fixed-point BFS</p>
+    <h1 class="base-head-title">{{ map.name }}</h1>
+    {{ placement_banner(map, seed) }}
+  </div>
+  {{ status(result.beatable) }}
+</div>
+
+<div class="base-split-layout">
+  <section class="base-panel-box">{{ map_svg(view, link_gates=true, map=map) }}</section>
+
+  <aside class="base-side-stack">
+    <section class="base-panel-box">
+      <h2 class="base-panel-title">{{ 'The boss can be reached' if result.beatable else 'The player gets stuck' }}</h2>
+      <p class="base-text-muted">The checker runs BFS with the abilities it has, collects every ability in the rooms it reached, and repeats until a pass finds nothing new. Each pass is a sphere.</p>
+      <ol class="base-list-rows">
+        {% for s in result.spheres %}
+          <li><span class="base-list-key">S{{ s.index }}</span><span>{{ s.rooms | names_of(names) }}{% if s.items %}<br>{% for it in s.items %}{{ pill(it) }}{% endfor %}{% endif %}</span></li>
+        {% endfor %}
+      </ol>
+    </section>
+
+    {% if not result.beatable %}
+      <section class="base-panel-box">
+        <h2 class="base-panel-title">Blocked gates</h2>
+        <ul class="base-list-rows">
+          {% for b in blocked %}
+            <li><span class="base-list-key is-bad">✕</span><span>{{ names[b.from_room] }} → {{ names[b.to_room] }} needs <code>{{ b.rule or 'the other side (one-way)' }}</code></span></li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    <section class="base-panel-box">
+      <h2 class="base-panel-title">Items</h2>
+      <ul class="base-list-rows">
+        {% for slot, item in placement.items() %}
+          <li><span class="base-list-key">{{ names[slot] }}</span><span>{{ pill(item) }}</span></li>
+        {% endfor %}
+      </ul>
+      <div class="base-btn-row">
+        <a class="base-btn-action" href="{{ url_for('main.route', map_id=map.id, **({'seed': seed.id} if seed else {})) }}">Find the route</a>
+        <a class="base-btn-action" href="{{ url_for('main.randomize_page', map_id=map.id) }}">Randomize</a>
+      </div>
+    </section>
+  </aside>
+</div>
+{% endblock %}

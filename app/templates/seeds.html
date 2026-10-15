@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Seeds · {{ map.name }}{% endblock %}
+{% block content %}
+<div class="base-head-row">
+  <div>
+    <p class="base-head-eyebrow">Merge sort · 3-way quicksort · binary search</p>
+    <h1 class="base-head-title">Seed leaderboard</h1>
+    <p class="base-text-muted">{{ total }} stored seeds. Each one keeps its fastest route time (Dijkstra) and fewest moves (BFS).</p>
+  </div>
+  <form class="seeds-batch-form" method="post">
+    <label class="base-form-field is-inline"><span>Generate seeds 1 to</span><input type="number" name="count" min="1" max="2000" value="500"></label>
+    <select name="algorithm" aria-label="Algorithm">{% for key, (label, _) in randomizers.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select>
+    <button class="base-btn-action is-primary" type="submit">Generate</button>
+  </form>
+</div>
+
+{% if total %}
+<div class="base-split-layout">
+  <section class="base-panel-box">
+    <div class="seeds-head-row">
+      <h2 class="base-panel-title">Top {{ rows | length }} by {{ sort_label | lower }}</h2>
+      <nav class="base-seg-nav" aria-label="Sort by">
+        {% for key, (label, _) in sort_keys.items() %}<a href="{{ url_for('main.seeds_page', map_id=map.id, sort=key) }}" {% if key == sort_key %}aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
+      </nav>
+    </div>
+    <div class="base-table-scroll"><table class="base-table-data">
+      <thead><tr><th>Rank</th><th>Seed</th><th>Algorithm</th><th>Code</th><th>Time</th><th>Moves</th><th>Attempts</th></tr></thead>
+      <tbody>{% for r in rows %}
+        <tr class="{% if search and search.hit and search.hit.id == r.id %}is-hit{% endif %}">
+          <td>{{ loop.index }}</td><td><a href="{{ url_for('main.overview', map_id=map.id, seed=r.id) }}">#{{ r.number }}</a></td>
+          <td>{{ randomizers[r.algorithm][0] }}</td><td><code>{{ r.code }}</code></td><td>{{ r.seconds }}s</td><td>{{ r.moves }}</td><td>{{ r.attempts }}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% if total > limit %}<a class="base-btn-action" href="{{ url_for('main.seeds_page', map_id=map.id, sort=sort_key, limit=limit + 50) }}">Show 50 more</a>{% endif %}
+  </section>
+
+  <aside class="base-side-stack">
+    <section class="base-panel-box">
+      <h2 class="base-panel-title">Sorting {{ total }} rows by {{ sort_label | lower }}</h2>
+      <div class="base-table-scroll"><table class="base-table-data">
+        <thead><tr><th>Algorithm</th><th>Comparisons</th><th>ms</th><th>Stable</th></tr></thead>
+        <tbody>{% for s in stats %}
+          <tr><td>{{ s.name }}</td><td>{{ '{:,}'.format(s.comparisons) if s.comparisons is not none else 'n/a' }}</td><td>{{ '%.2f' % s.ms }}</td><td>{{ 'Yes' if s.stable else 'No' }}</td></tr>
+        {% endfor %}</tbody>
+      </table></div>
+      <p class="{{ 'is-ok' if agree else 'is-bad' }}">{{ 'All three produce the same order.' if agree else 'The sorts disagree.' }}</p>
+      <p class="base-text-muted">Many seeds share the same route time. A 3-way partition groups every key equal to the pivot in the middle, which keeps quicksort from degrading toward O(n²) on ties. Merge sort is stable, so seeds with equal times stay in the order they were generated.</p>
+    </section>
+
+    <section class="base-panel-box">
+      <h2 class="base-panel-title">Binary search</h2>
+      <form class="base-btn-row" method="get">
+        <input type="hidden" name="sort" value="{{ sort_key }}">
+        <label class="base-form-field is-inline"><span>First seed with {{ sort_label | lower }} ≥</span>
+          <input type="number" step="any" name="target" value="{{ '%g' % search.target if search else '' }}" required></label>
+        <button class="base-btn-action is-primary" type="submit">Search</button>
+      </form>
+      {% if search %}
+        <div class="base-table-scroll"><table class="base-table-data">
+          <thead><tr><th>Probe</th><th>lo</th><th>hi</th><th>mid</th><th>Value</th><th>Go</th></tr></thead>
+          <tbody>{% for p in search.probes %}<tr><td>{{ loop.index }}</td><td>{{ p.lo }}</td><td>{{ p.hi }}</td><td>{{ p.mid }}</td><td>{{ p.value }}</td><td>{{ p.go }}</td></tr>{% endfor %}</tbody>
+        </table></div>
+        {% if search.hit %}
+          <p class="is-ok">Index {{ search.index }}: seed #{{ search.hit.number }}. {{ search.index }} of {{ total }} seeds fall below the target. {{ search.probes | length }} probes, where a linear scan could need {{ total }}.</p>
+        {% else %}
+          <p class="is-bad">No seed reaches that value.</p>
+        {% endif %}
+      {% endif %}
+    </section>
+  </aside>
+</div>
+{% else %}
+  <section class="base-panel-box"><p class="base-text-muted">No seeds yet. Generate a batch above to fill the leaderboard.</p></section>
+{% endif %}
+{% endblock %}
