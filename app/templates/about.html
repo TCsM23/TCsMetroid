@@ -1,58 +1,227 @@
 {% extends "base.html" %}
-{% block title %}How it works{% endblock %}
+{% block title %}About{% endblock %}
 {% block content %}
-<div class="base-head-row">
-  <div>
-    <p class="base-head-eyebrow">How it works</p>
-    <h1 class="base-head-title">From sketch to playable map</h1>
-    <p class="base-text-muted">TCsMetroid treats a Metroidvania map as a graph. Rooms are nodes, doors are edges, and each door has a rule saying which power-ups open it.</p>
+<div class="about-top-grid">
+  <div class="about-top-intro">
+    <p class="base-head-eyebrow">About</p>
+    <h1 class="base-head-title">About TCsMetroid</h1>
+    <p class="base-text-muted">What TCsMetroid is, a quick reference for the designer, the rules and the game, how to reach me, and how to support the project.</p>
   </div>
+  <nav class="about-jump-nav" aria-label="On this page">
+    <a href="#about">About</a>
+    <a href="#designer">Designer &amp; game</a>
+    <a href="#reference">Reference</a>
+    <a href="#contact">Contact</a>
+    <a href="#support">Support me</a>
+  </nav>
 </div>
 
-<div class="about-step-grid">
-  <section class="base-panel-box about-step-card">
-    <h3>Design</h3>
-    <p>Drag rooms on a grid and draw doors between them. Give each door a rule such as <code>J | (D &amp; G)</code>: "Double Jump, or Dash and Grapple together".</p>
-  </section>
-  <section class="base-panel-box about-step-card">
-    <h3>Invent power-ups</h3>
-    <p>Every map has its own power-up list. Give each one a letter, a name and a colour. Abilities open doors; collectibles only raise max energy in the game.</p>
-  </section>
-  <section class="base-panel-box about-step-card">
-    <h3>Verify</h3>
-    <p>The checker proves the boss can be reached, the route finder compares four search algorithms, and the analysis page finds rooms that can trap the player.</p>
-  </section>
-  <section class="base-panel-box about-step-card">
-    <h3>Play</h3>
-    <p>Press Play to explore the map yourself. The game uses the same rules, so a door that's locked in the checker is locked in the game too.</p>
-  </section>
-</div>
+{# ------------------------------------------------------------ about #}
+<section class="base-panel-box about-section-card" id="about">
+  <h2 class="about-section-title">About TCsMetroid</h2>
+  <p class="about-section-text">
+    TCsMetroid is a workshop for Metroidvania maps. It treats a map as a graph: rooms are nodes, doors are edges,
+    and every door has a rule that says which power-ups open it. Because the rules are data, the app can
+    <em>prove</em> a map can be finished before anyone plays it.
+  </p>
+  <div class="about-step-grid">
+    <div class="about-step-card">
+      <h3>Design</h3>
+      <p>Drag rooms on a grid and draw doors between them. Give each door a rule such as <code>J | (D &amp; G)</code>.</p>
+    </div>
+    <div class="about-step-card">
+      <h3>Invent power-ups</h3>
+      <p>Every map has its own power-up list: a letter, a name and a colour for each one.</p>
+    </div>
+    <div class="about-step-card">
+      <h3>Verify</h3>
+      <p>The checker proves the boss can be reached, the route finder compares four searches, and the analysis finds traps.</p>
+    </div>
+    <div class="about-step-card">
+      <h3>Play</h3>
+      <p>Press Play and explore it yourself. The game uses the same rules, so a locked door is locked everywhere.</p>
+    </div>
+  </div>
+  <ul class="about-section-list">
+    <li><a href="{{ url_for('main.index') }}">Maps</a> lists your maps and the templates you saved.</li>
+    <li><a href="{{ url_for('main.sandbox') }}">Sandbox</a> is a scratch designer: nothing is saved until you ask.</li>
+    <li><strong>Check, Route and Analysis</strong> are on every map's bar, under Verify.</li>
+    <li><strong>Seed and Leaderboard</strong> shuffle the power-ups and rank every seed you make.</li>
+  </ul>
+</section>
 
-<div class="base-split-layout is-even">
-  <section class="base-panel-box" id="controls">
-    <h2 class="base-panel-title">Game controls</h2>
-    <dl class="about-keys-list">
-      <dt><kbd class="base-kbd">W</kbd><kbd class="base-kbd">A</kbd><kbd class="base-kbd">S</kbd><kbd class="base-kbd">D</kbd> or arrows</dt><dd>Move</dd>
-      <dt><kbd class="base-kbd">Space</kbd> <kbd class="base-kbd">J</kbd> or click</dt><dd>Fire beam (click aims at the cursor)</dd>
-      <dt><kbd class="base-kbd">Esc</kbd> <kbd class="base-kbd">P</kbd></dt><dd>Pause and show the full map</dd>
-      <dt><kbd class="base-kbd">M</kbd></dt><dd>Mute sound</dd>
-      <dt><kbd class="base-kbd">F</kbd></dt><dd>Full screen</dd>
-    </dl>
-    <p class="base-text-muted">Walk into a door to go through it. Locked doors show which power-ups they need. Touch a glowing orb to pick up a power-up. Defeat the boss to finish.</p>
-  </section>
+{# ------------------------------------------------------------ designer & game #}
+<section class="base-panel-box about-section-card" id="designer">
+  <h2 class="about-section-title">Designer &amp; game</h2>
+  <div class="about-two-grid">
+    <div>
+      <h3 class="about-section-sub is-first">Designer</h3>
+      <dl class="about-keys-list">
+        <div><dt><kbd class="base-kbd">V</kbd></dt><dd>Move rooms</dd></div>
+        <div><dt><kbd class="base-kbd">D</kbd></dt><dd>Draw a door: drag from one room to another</dd></div>
+        <div><dt><kbd class="base-kbd">R</kbd></dt><dd>Add a room on an empty cell</dd></div>
+        <div><dt><kbd class="base-kbd">Del</kbd></dt><dd>Delete the selected room or door</dd></div>
+        <div><dt><kbd class="base-kbd">Ctrl</kbd> <kbd class="base-kbd">Z</kbd> / <kbd class="base-kbd">Y</kbd></dt><dd>Undo and redo</dd></div>
+        <div><dt><kbd class="base-kbd">+</kbd> <kbd class="base-kbd">−</kbd></dt><dd>Zoom in and out (or Ctrl + wheel, or pinch)</dd></div>
+        <div><dt><kbd class="base-kbd">0</kbd> / <kbd class="base-kbd">1</kbd></dt><dd>Fit the map / back to 100%</dd></div>
+        <div><dt>Drag empty space</dt><dd>Pan around the map</dd></div>
+        <div><dt><kbd class="base-kbd">Esc</kbd></dt><dd>Clear the selection</dd></div>
+      </dl>
+    </div>
+    <div id="controls">
+      <h3 class="about-section-sub is-first">Game</h3>
+      <dl class="about-keys-list">
+        <div><dt><kbd class="base-kbd">W</kbd><kbd class="base-kbd">A</kbd><kbd class="base-kbd">S</kbd><kbd class="base-kbd">D</kbd></dt><dd>Move (arrows work too)</dd></div>
+        <div><dt><kbd class="base-kbd">Space</kbd> <kbd class="base-kbd">J</kbd></dt><dd>Fire the beam. Clicking aims at the cursor</dd></div>
+        <div><dt><kbd class="base-kbd">Esc</kbd> <kbd class="base-kbd">P</kbd></dt><dd>Pause and show the full map</dd></div>
+        <div><dt><kbd class="base-kbd">M</kbd></dt><dd>Mute sound</dd></div>
+        <div><dt><kbd class="base-kbd">F</kbd></dt><dd>Full screen</dd></div>
+        <div><dt>Touch</dt><dd>The on-screen pad appears on phones and tablets</dd></div>
+      </dl>
+      <p class="about-section-text">Walk into a door to go through it. Locked doors show the power-ups they need. Touch a glowing orb to pick one up, then defeat the boss to finish.</p>
+    </div>
+  </div>
+</section>
 
-  <section class="base-panel-box" id="algorithms">
-    <h2 class="base-panel-title">Algorithms inside</h2>
-    <ul class="base-list-rows">
-      <li><span class="base-list-key">Parser</span><span>Recursive descent turns door rules into expression trees</span></li>
-      <li><span class="base-list-key">BFS</span><span>Fixed-point check groups rooms into spheres of progress</span></li>
-      <li><span class="base-list-key">Dijkstra · A*</span><span>Fastest route over (room, power-ups held) states</span></li>
-      <li><span class="base-list-key">Kahn</span><span>Topological sort gives the order power-ups must be found</span></li>
-      <li><span class="base-list-key">Tarjan</span><span>Strongly connected parts split by one-way drops</span></li>
-      <li><span class="base-list-key">Union-find</span><span>Regions a player can walk around freely</span></li>
-      <li><span class="base-list-key">Reverse BFS</span><span>Soft-lock states the game warns you about</span></li>
-      <li><span class="base-list-key">Fisher–Yates</span><span>Seeded shuffles for the randomizer</span></li>
-    </ul>
-  </section>
-</div>
+{# ------------------------------------------------------------ reference #}
+<section class="base-panel-box about-section-card" id="reference">
+  <h2 class="about-section-title">Reference</h2>
+
+  <h3 class="about-section-sub is-first">Door rules</h3>
+  <p class="about-section-text">A rule is made of power-up letters joined by <code>&amp;</code> (and) and <code>|</code> (or). <code>&amp;</code> is checked before <code>|</code>, the same way × comes before + in maths.</p>
+  <div class="about-table-wrap">
+    <table class="about-ref-table">
+      <thead><tr><th scope="col">Rule</th><th scope="col">Meaning</th></tr></thead>
+      <tbody>
+        {% for rule, meaning in rule_syntax %}
+          <tr><th scope="row"><code>{{ rule }}</code></th><td>{{ meaning }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="about-section-sub">Default power-ups</h3>
+  <p class="about-section-text">New maps start with these. Rename, recolour or replace them in the designer: up to 10 abilities and 16 power-ups in all.</p>
+  <div class="about-table-wrap">
+    <table class="about-ref-table">
+      <thead><tr><th scope="col">Key</th><th scope="col">Name</th><th scope="col">Kind</th><th scope="col">What it does</th></tr></thead>
+      <tbody>
+        {% for p in powerup_rows %}
+          <tr>
+            <th scope="row"><span class="about-ref-swatch" style="background: {{ p.color }}"></span>{{ p.key }}</th>
+            <td>{{ p.name }}</td>
+            <td>{{ "Ability" if p.progression else "Collectible" }}</td>
+            <td>{{ p.description }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="about-section-sub" id="algorithms">Algorithms inside</h3>
+  <dl class="about-keys-list">
+    <div><dt>Parser</dt><dd>Recursive descent turns door rules into expression trees</dd></div>
+    <div><dt>BFS</dt><dd>Fixed-point check groups rooms into spheres of progress</dd></div>
+    <div><dt>Dijkstra · A*</dt><dd>Fastest route over (room, power-ups held) states</dd></div>
+    <div><dt>Kahn</dt><dd>Topological sort gives the order power-ups must be found</dd></div>
+    <div><dt>Tarjan</dt><dd>Strongly connected parts, split by one-way drops</dd></div>
+    <div><dt>Union-find</dt><dd>Regions a player can walk around freely</dd></div>
+    <div><dt>Reverse BFS</dt><dd>Soft-lock states the game warns you about</dd></div>
+    <div><dt>Fisher–Yates</dt><dd>Seeded shuffles for the randomizer</dd></div>
+  </dl>
+
+  <h3 class="about-section-sub">Words worth knowing</h3>
+  <dl class="about-keys-list">
+    <div><dt>Sphere</dt><dd>Everything you can reach with what you hold now. Each new power-up opens the next sphere.</dd></div>
+    <div><dt>Soft-lock</dt><dd>A spot you can reach but never leave without the power-ups you need.</dd></div>
+    <div><dt>One-way door</dt><dd>A drop or shutter you can pass one way only.</dd></div>
+    <div><dt>Seed</dt><dd>A number that fixes one shuffle, so anyone can replay the same layout.</dd></div>
+    <div><dt>Par</dt><dd>The fewest moves the route finder needs to reach the boss.</dd></div>
+  </dl>
+
+  <h3 class="about-section-sub">JSON API</h3>
+  <div class="about-table-wrap">
+    <table class="about-ref-table">
+      <thead><tr><th scope="col">Method</th><th scope="col">Path</th><th scope="col">What it does</th></tr></thead>
+      <tbody>
+        {% for method, path, what in api_routes %}
+          <tr><th scope="row"><span class="about-ref-method">{{ method }}</span></th><td><code>{{ path }}</code></td><td>{{ what }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="about-section-sub">Credits</h3>
+  <p class="about-section-text">Built with Flask, Flask-SQLAlchemy and NetworkX. The game is plain JavaScript on a canvas. Typefaces: Orbitron, Roboto and Roboto Mono.</p>
+</section>
+
+{# ------------------------------------------------------------ contact #}
+<section class="base-panel-box about-section-card" id="contact">
+  <h2 class="about-section-title">Contact</h2>
+  <div class="about-contact-grid">
+    {% if emailjs.service and emailjs.template and emailjs.key %}
+      <form class="about-contact-form" id="about-contact-form" novalidate
+            data-service="{{ emailjs.service }}" data-template="{{ emailjs.template }}" data-key="{{ emailjs.key }}">
+        <input type="hidden" name="title" value="New message from TCsMetroid">
+        <label class="base-form-field">
+          <span>Name</span>
+          <input type="text" name="name" placeholder="Your name" autocomplete="name" required>
+        </label>
+        <label class="base-form-field">
+          <span>Email</span>
+          <input type="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+        </label>
+        <label class="base-form-field">
+          <span>Message</span>
+          <textarea name="message" rows="5" placeholder="Found a bug? Say which page, what you pressed, and what you expected." required></textarea>
+        </label>
+        <button type="submit" class="base-btn-action is-primary about-contact-submit" id="about-contact-submit">Send message</button>
+        <p class="about-contact-status" id="about-contact-status" role="status" aria-live="polite"></p>
+      </form>
+    {% endif %}
+
+    <div class="about-contact-channels">
+      <h3 class="about-section-sub is-first">Direct channels</h3>
+      {% if links.email or links.facebook or links.github or links.youtube or links.linkedin %}
+        <ul class="about-contact-links">
+          {% if links.email %}<li><a href="mailto:{{ links.email }}">{{ links.email }}</a></li>{% endif %}
+          {% if links.facebook %}<li><a href="{{ links.facebook }}" target="_blank" rel="noopener">Facebook</a></li>{% endif %}
+          {% if links.github %}<li><a href="{{ links.github }}" target="_blank" rel="noopener">GitHub</a></li>{% endif %}
+          {% if links.linkedin %}<li><a href="{{ links.linkedin }}" target="_blank" rel="noopener">LinkedIn</a></li>{% endif %}
+          {% if links.youtube %}<li><a href="{{ links.youtube }}" target="_blank" rel="noopener">YouTube</a></li>{% endif %}
+        </ul>
+      {% else %}
+        <p class="about-section-text">Contact details are coming soon.</p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{# ------------------------------------------------------------ support #}
+<section class="base-panel-box about-section-card" id="support">
+  <h2 class="about-section-title">Support me</h2>
+  <p class="about-section-text">
+    TCsMetroid is free and has no ads. The best support is free too:
+    share a map you made, and tell me what to add next.
+  </p>
+  <div class="about-support-actions">
+    {% if links.tip %}
+      <a class="base-btn-action is-primary" href="{{ links.tip }}" target="_blank" rel="noopener">Tip via PayPal</a>
+    {% endif %}
+    {% if links.gcash_qr %}
+      <details class="about-support-qr">
+        <summary class="base-btn-action is-visor">Tip via GCash</summary>
+        <img src="{{ url_for('static', filename='support-qr.png') }}" alt="GCash QR code" width="220" height="220">
+        <p class="about-section-text">Scan with GCash or any QR Ph app.</p>
+      </details>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+  {% if emailjs.service and emailjs.template and emailjs.key %}
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4.4.1/dist/email.min.js"></script>
+    <script src="{{ url_for('static', filename='about.js') }}"></script>
+  {% endif %}
 {% endblock %}

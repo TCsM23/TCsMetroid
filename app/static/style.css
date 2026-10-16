@@ -331,15 +331,71 @@ a:hover .mapsvg-gate-badge rect, a:focus .mapsvg-gate-badge rect { stroke: var(-
 .index-empty-box { border: 1px dashed var(--line-2); border-radius: 8px; padding: 28px; text-align: center; color: var(--muted); }
 
 /* ---------------------------------------------------------------- about */
-.about-step-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 16px; }
-.about-step-card { counter-increment: step; }
-.about-step-card h3 { margin: 0; font: 700 15px var(--f-display); text-transform: uppercase; letter-spacing: .05em; }
+/* about: one page with About, Designer & game, Reference, Contact and Support me */
+.about-top-grid { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px 24px; }
+.about-top-intro { flex: 1 1 380px; min-width: 0; }
+.about-jump-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.about-jump-nav a { padding: 7px 12px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--panel-2); color: var(--muted);
+  font: 600 11.5px var(--f-display); letter-spacing: .08em; text-transform: uppercase; text-decoration: none; transition: color .2s, border-color .2s, background .2s; }
+.about-jump-nav a:hover { color: var(--visor-ink); background: var(--visor); border-color: var(--visor); }
+.about-section-card { scroll-margin-top: 96px; gap: 10px; }
+.about-section-title { margin: 0 0 4px; font: 700 clamp(18px, 2vw, 22px) var(--f-display); text-transform: uppercase; letter-spacing: .05em; }
+.about-section-title::after { content: ""; display: block; width: 48px; height: 3px; margin-top: 8px; background: var(--accent); box-shadow: 0 0 12px var(--accent-soft); }
+.about-section-sub { margin: 18px 0 2px; font: 700 13px var(--f-display); text-transform: uppercase; letter-spacing: .1em; color: var(--visor); }
+.about-section-sub.is-first { margin-top: 0; }
+.about-section-text { margin: 0; color: var(--text-soft); max-width: 75ch; }
+.about-section-list { margin: 4px 0 0; padding-left: 1.2rem; color: var(--text-soft); display: grid; gap: 6px; }
+.about-two-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 24px; }
+
+.about-step-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; counter-reset: step; margin: 6px 0; }
+.about-step-card { counter-increment: step; display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--panel-2); transition: border-color .25s, transform .25s var(--ease-out); }
+.about-step-card:hover { border-color: var(--visor); transform: translateY(-2px); }
+.about-step-card h3 { margin: 0; font: 700 14px var(--f-display); text-transform: uppercase; letter-spacing: .05em; }
 .about-step-card h3::before { content: "0" counter(step) " "; color: var(--accent); font-family: var(--f-mono); }
-.about-step-grid { counter-reset: step; }
-.about-step-card p { margin: 0; color: var(--text-soft); }
-.about-keys-list { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0; align-items: center; }
-.about-keys-list dt { display: flex; gap: 4px; flex-wrap: wrap; }
+.about-step-card p { margin: 0; color: var(--text-soft); font-size: 13.5px; }
+
+.about-keys-list { display: grid; gap: 6px; margin: 0; }
+.about-keys-list > div { display: grid; grid-template-columns: minmax(130px, 200px) 1fr; gap: 12px; align-items: center; padding: 7px 10px;
+  border: 1px solid var(--line); border-radius: 4px; background: var(--panel-2); }
+.about-keys-list dt { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; font: 600 12.5px var(--f-mono); }
 .about-keys-list dd { margin: 0; color: var(--text-soft); }
+
+.about-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 4px; }
+.about-ref-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.about-ref-table th, .about-ref-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+.about-ref-table tbody tr:last-child > * { border-bottom: 0; }
+.about-ref-table thead th { font: 600 10.5px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); background: var(--panel-2); }
+.about-ref-table tbody th { font: 600 13px var(--f-mono); white-space: nowrap; }
+.about-ref-table td { color: var(--text-soft); }
+.about-ref-table tbody tr:hover { background: var(--visor-soft); }
+.about-ref-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: 0; }
+.about-ref-method { font: 700 10.5px var(--f-mono); letter-spacing: .08em; color: var(--visor); }
+
+.about-contact-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.about-contact-grid > :only-child { grid-column: 1 / -1; }
+.about-contact-form { display: grid; gap: 12px; }
+.about-contact-form textarea { font-family: var(--f-body); font-size: 13.5px; min-height: 130px; }
+.about-contact-submit { justify-self: start; }
+.about-contact-submit:disabled { opacity: .6; cursor: wait; }
+.about-contact-status { margin: 0; min-height: 1.5em; color: var(--muted); }
+.about-contact-status[data-kind="ok"] { color: var(--ok); }
+.about-contact-status[data-kind="error"] { color: var(--bad); }
+.about-contact-links { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.about-contact-links a { display: block; padding: 9px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel-2); text-decoration: none;
+  transition: border-color .2s, transform .2s var(--ease-out); }
+.about-contact-links a:hover { border-color: var(--visor); transform: translateX(3px); }
+
+.about-support-actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; margin-top: 4px; }
+.about-support-qr summary { list-style: none; }
+.about-support-qr summary::-webkit-details-marker { display: none; }
+.about-support-qr[open] { flex-basis: 100%; }
+.about-support-qr img { display: block; margin: 14px 0 8px; padding: 8px; border-radius: 4px; background: #fff; max-width: 100%; height: auto; }
+
+@media (max-width: 760px) {
+  .about-contact-grid { grid-template-columns: 1fr; }
+  .about-keys-list > div { grid-template-columns: 1fr; gap: 4px; }
+}
 
 /* ---------------------------------------------------------------- analysis, seeds, editor */
 .analysis-regions-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }

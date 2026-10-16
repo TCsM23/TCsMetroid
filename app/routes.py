@@ -149,9 +149,56 @@ def delete_map(map_id):
     return redirect(url_for("main.index"))
 
 
+# ---------------------------------------------------------------- about / reference / contact / support
+# Fill these in to switch the matching buttons on. Empty = hidden.
+ABOUT_LINKS = {
+    "email": "yvesjerico@gmail.com",
+    "facebook": "facebook.com/yvesjerico.repayo/",
+    "youtube": "https://www.youtube.com/@tcsm0023",
+    "github": "https://github.com/TCsM23",
+    "linkedin": "https://linkedin.com/in/yves-jerico-repayo-72a593444",
+    "tip": "https://www.paypal.me/YJRepayo",      
+    "gcash_qr": True,  # set True after adding static/chords/support-qr.png
+}
+
+# From your EmailJS dashboard. Leave empty to hide the message form.
+ABOUT_EMAILJS = {
+    "service": "service_j9t3wna",
+    "template": "template_q4x6tth",
+    "key": "aI14LXH9_lJrPbSQ5",
+}
+
+
+RULE_SYNTAX = [
+    ("J", "Needs Double Jump"),
+    ("J & G", "Needs both (AND)"),
+    ("J | G", "Needs either one (OR)"),
+    ("M & (D | J)", "Brackets group a part, like in maths"),
+    ("(empty)", "Always open"),
+]
+
+API_ROUTES = [
+    ("GET", "/api/maps", "Every map, short form"),
+    ("GET", "/api/maps/<id>", "One map as JSON"),
+    ("POST", "/api/maps", "Import a map from JSON"),
+    ("PUT", "/api/maps/<id>", "Save a map from the designer"),
+    ("POST", "/api/maps/<id>/check", "Run the beatability checker"),
+    ("GET", "/api/maps/<id>/route", "Fastest route (?algorithm=astar)"),
+    ("POST", "/api/maps/<id>/randomize", "Make a new seed"),
+    ("GET", "/api/maps/<id>/export/game", "Map, rules and route for a game engine"),
+]
+
+
 @bp.get("/about")
 def about():
-    return render_template("about.html")
+    return render_template(
+        "about.html",
+        links=ABOUT_LINKS,
+        emailjs=ABOUT_EMAILJS,
+        powerup_rows=DEFAULT_POWERUPS.to_list(),
+        rule_syntax=RULE_SYNTAX,
+        api_routes=API_ROUTES,
+    )
 
 
 # ---------------------------------------------------------------- overview (checker)

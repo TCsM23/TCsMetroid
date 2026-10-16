@@ -20,6 +20,7 @@ edges guarded by ability rules such as `J | (D & G)`. The app can:
 - **Responsive** layout with a menu button on tablets and phones
 - **Edit** maps in a table editor, and import/export them as JSON
 - **Serve** everything through a JSON API
+- **About page** with a reference, a contact form (EmailJS) and PayPal / GCash support, all hidden until you fill in your own details
 
 Every data structure the algorithms rely on (queue, stack, min-heap, union-find, the rule
 parser) is written from scratch in `app/engine/`, so the algorithms can be read and tested
@@ -77,11 +78,22 @@ app/
   static/designer.js   drag-and-drop designer (browser side)
   static/game.js       the playable game (browser side)
   static/motion.js     animated backgrounds, page motion, mobile menu
+  static/about.js      sends the About page's contact form with EmailJS
   engine/powerups.py   per-map power-up lists
-tests/                 171 pytest tests
+tests/                 177 pytest tests
 examples/load_map.py   using an exported map without the planner
 run.py
 ```
+
+## Your About page details
+
+The About page reads two dictionaries at the top of the about section in `app/routes.py`.
+Anything left empty is hidden, so the public repo shows nothing private.
+
+- `ABOUT_LINKS`: email, Facebook, YouTube, GitHub, LinkedIn, a PayPal.me link (`tip`), and
+  `gcash_qr = True` once you've put your QR image at `app/static/support-qr.png`
+- `ABOUT_EMAILJS`: the service ID, template ID and public key from your EmailJS dashboard.
+  The template can use `{{name}}`, `{{email}}`, `{{message}}` and `{{title}}`.
 
 ## Algorithms and data structures
 
